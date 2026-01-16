@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramientas MPXA 2026 - Guía Interactiva</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Warm Neutrals & Sage -->
+    <!-- Primary Background: #f7f5f0 (Isabelline/Warm White) -->
+    <!-- Secondary/Cards: #ffffff (White) -->
+    <!-- Text: #333333 (Charcoal) -->
+    <!-- Accents: #7c9082 (Sage Green), #d4a373 (Sand/Tan) -->
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f7f5f0; color: #333333; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
+        .chart-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 600px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            height: 300px; 
+            max-height: 400px; 
+        }
+        @media (min-width: 768px) { 
+            .chart-container { height: 350px; } 
+        }
+        .step-active { background-color: #7c9082; color: white; border-color: #7c9082; }
+        .step-inactive { background-color: white; color: #7c9082; border-color: #7c9082; }
+        .filter-btn-active { background-color: #333; color: white; }
+        .filter-btn-inactive { background-color: #e5e5e5; color: #333; }
+        .hidden-content { display: none; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Application Structure Plan:
+         1. Header: Contextual branding (MPXA 2026).
+         2. Dashboard Intro: Brief summary of the "New Narratives" toolkit concept.
+         3. The Creation Workflow (Process Flow): An interactive stepper (Ideation -> Code -> Test -> Publish) that reveals relevant tools for each stage. This guides the user through the "How-To" aspect of the report.
+         4. Tool Explorer (Filterable Grid): A complete catalogue where users can filter by category (AI, Dev, Distro, Org).
+         5. Analysis Dashboard (Charts): Visualizing the "Focus" of different AI models (inferred capability scores) and the distribution of tools by category using Chart.js.
+         6. Task Matcher (Interactive): A simple "I want to..." dropdown that recommends a specific tool based on the report's "Principal Application" data.
+         Why this structure? It moves from high-level process understanding (Workflow) to specific tool lookup (Explorer) to analytical comparison (Charts), catering to different user needs (learning the process vs. finding a tool).
+    -->
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 py-6">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-3xl font-bold text-gray-800">MPXA 2026: Kit de Herramientas</h1>
+            <p class="text-sm text-gray-500 mt-2 uppercase tracking-wide">Datos, IA y Nuevas Narrativas • Basado en la ponencia de Félix Arias</p>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-8 space-y-12">
+
+        <!-- Intro Section -->
+        <section class="max-w-4xl mx-auto text-center">
+            <h2 class="text-2xl font-semibold mb-4 text-[#7c9082]">El Ecosistema del Creador Multimedia</h2>
+            <p class="text-gray-600 leading-relaxed mb-6">
+                Esta aplicación interactiva sintetiza las herramientas y flujos de trabajo presentados para la creación de proyectos digitales modernos. 
+                Desde la asistencia mediante Inteligencia Artificial Generativa hasta la distribución final, explora cómo estas tecnologías se integran para potenciar nuevas narrativas periodísticas y de datos.
+            </p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div class="bg-white p-4 rounded-lg card-shadow">
+                    <div class="text-2xl mb-2">🧠</div>
+                    <div class="font-bold text-sm">IA Generativa</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg card-shadow">
+                    <div class="text-2xl mb-2">💻</div>
+                    <div class="font-bold text-sm">Desarrollo</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg card-shadow">
+                    <div class="text-2xl mb-2">📡</div>
+                    <div class="font-bold text-sm">Distribución</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg card-shadow">
+                    <div class="text-2xl mb-2">⚙️</div>
+                    <div class="font-bold text-sm">Organización</div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-gray-200">
+
+        <!-- Visualization & Content Choices:
+             Goal: Explain the "Process" described in the report (Request -> Edit -> Check -> Host).
+             Method: Interactive Stepper. Clicking a step updates the description and tool list below.
+             Interaction: Tab-like switching.
+             Justification: The report outlines a specific workflow. A static list is boring; an interactive stepper reinforces the sequential nature of building a project.
+             NO SVG: Used styled HTML/Tailwind borders and CSS circles.
+        -->
+        <section id="workflow-section">
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-gray-800">Flujo de Trabajo: Del Prompt al "On Air"</h3>
+                <p class="text-gray-600 text-sm mt-2">
+                    La metodología sugerida comienza con la asistencia de IA y termina con la publicación profesional. 
+                    Haz clic en los pasos para ver las herramientas recomendadas para cada etapa.
+                </p>
+            </div>
+
+            <!-- Stepper UI -->
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 relative">
+                <!-- Connecting Line (Desktop) -->
+                <div class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gray-300 -z-10 transform -translate-y-1/2"></div>
+                
+                <!-- Steps -->
+                <button onclick="setStep(0)" class="workflow-step group flex flex-col items-center focus:outline-none w-full md:w-auto mb-4 md:mb-0">
+                    <div id="step-circle-0" class="w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold bg-white transition-colors duration-300 step-active">1</div>
+                    <span class="mt-2 text-sm font-medium bg-[#f7f5f0] px-2">Ideación e IA</span>
+                </button>
+                <button onclick="setStep(1)" class="workflow-step group flex flex-col items-center focus:outline-none w-full md:w-auto mb-4 md:mb-0">
+                    <div id="step-circle-1" class="w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold bg-white transition-colors duration-300 step-inactive">2</div>
+                    <span class="mt-2 text-sm font-medium bg-[#f7f5f0] px-2">Edición de Código</span>
+                </button>
+                <button onclick="setStep(2)" class="workflow-step group flex flex-col items-center focus:outline-none w-full md:w-auto mb-4 md:mb-0">
+                    <div id="step-circle-2" class="w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold bg-white transition-colors duration-300 step-inactive">3</div>
+                    <span class="mt-2 text-sm font-medium bg-[#f7f5f0] px-2">Prueba Local</span>
+                </button>
+                <button onclick="setStep(3)" class="workflow-step group flex flex-col items-center focus:outline-none w-full md:w-auto mb-4 md:mb-0">
+                    <div id="step-circle-3" class="w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold bg-white transition-colors duration-300 step-inactive">4</div>
+                    <span class="mt-2 text-sm font-medium bg-[#f7f5f0] px-2">Distribución</span>
+                </button>
+            </div>
+
+            <!-- Step Content -->
+            <div id="step-content-container" class="bg-white p-6 rounded-xl card-shadow min-h-[200px] border-l-4 border-[#7c9082]">
+                <!-- Dynamic Content Loaded via JS -->
+            </div>
+        </section>
+
+        <!-- Visualization & Content Choices:
+             Goal: Explore the full catalog.
+             Method: Filterable Card Grid.
+             Interaction: Category buttons filter the visible cards.
+             Justification: Allows users to focus on specific toolsets (e.g., just "Organization" tools) without scrolling through a long list.
+        -->
+        <section id="explorer-section">
+            <div class="mb-6 flex flex-col md:flex-row justify-between items-end md:items-center">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800">Explorador de Herramientas</h3>
+                    <p class="text-gray-600 text-sm mt-1">Navega por las categorías mencionadas en la presentación.</p>
+                </div>
+                <div class="mt-4 md:mt-0 space-x-2 flex flex-wrap gap-y-2">
+                    <button onclick="filterTools('all')" class="filter-btn px-3 py-1 rounded-full text-xs font-semibold transition-colors filter-btn-active" data-filter="all">Todas</button>
+                    <button onclick="filterTools('ia')" class="filter-btn px-3 py-1 rounded-full text-xs font-semibold transition-colors filter-btn-inactive" data-filter="ia">IA Generativa</button>
+                    <button onclick="filterTools('dev')" class="filter-btn px-3 py-1 rounded-full text-xs font-semibold transition-colors filter-btn-inactive" data-filter="dev">Desarrollo</button>
+                    <button onclick="filterTools('dist')" class="filter-btn px-3 py-1 rounded-full text-xs font-semibold transition-colors filter-btn-inactive" data-filter="dist">Distribución</button>
+                    <button onclick="filterTools('org')" class="filter-btn px-3 py-1 rounded-full text-xs font-semibold transition-colors filter-btn-inactive" data-filter="org">Organización</button>
+                </div>
+            </div>
+
+            <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Tool Cards Generated by JS -->
+            </div>
+        </section>
+
+        <!-- Visualization & Content Choices:
+             Goal: Analytical comparison.
+             Method: Radar Chart (Spider Chart) for AI models + Donut Chart for Tool Distribution.
+             Interaction: Hover for tooltips.
+             Justification: The Radar chart is excellent for comparing "Qualitative profiles" of the different AI models based on the speaker's description (e.g., Coding vs Writing vs Research). The Donut chart gives a quick sense of the ecosystem's balance.
+             Library: Chart.js (Canvas).
+        -->
+        <section id="analysis-section" class="bg-white rounded-xl card-shadow p-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Análisis del Ecosistema</h3>
+            <p class="text-gray-600 text-sm mb-8">
+                Visualización basada en las capacidades destacadas de cada herramienta en la presentación.
+                El gráfico de radar compara el enfoque funcional de los principales modelos de IA, mientras que el gráfico de anillo muestra la distribución de herramientas por categoría.
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Radar Chart Container -->
+                <div class="flex flex-col items-center">
+                    <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Perfil de Capacidades IA (Estimado)</h4>
+                    <div class="chart-container">
+                        <canvas id="aiRadarChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-500 text-center max-w-xs">
+                        * Puntuaciones inferidas basadas en las descripciones de uso principal (e.g., "Claude Code" para programación, "Perplexity" para citas).
+                    </div>
+                </div>
+
+                <!-- Donut Chart Container -->
+                <div class="flex flex-col items-center">
+                    <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Distribución de Herramientas por Categoría</h4>
+                    <div class="chart-container">
+                        <canvas id="categoryDonutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Visualization & Content Choices:
+             Goal: Direct problem solving.
+             Method: Simple Logic Form.
+             Interaction: User selects a task, JS returns a recommended tool text block.
+             Justification: Provides actionable advice ("What should I use for X?") directly from the report's content.
+        -->
+        <section id="task-matcher" class="bg-[#7c9082] rounded-xl card-shadow p-8 text-white">
+            <div class="max-w-3xl mx-auto text-center">
+                <h3 class="text-2xl font-bold mb-4">¿Qué quieres hacer hoy?</h3>
+                <p class="opacity-90 mb-6">Selecciona una tarea para recibir la recomendación de la presentación.</p>
+                
+                <div class="flex flex-col md:flex-row justify-center items-center gap-4">
+                    <select id="task-select" class="text-gray-800 rounded-lg px-4 py-3 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                        <option value="" disabled selected>Selecciona una tarea...</option>
+                        <option value="code">Escribir o corregir código</option>
+                        <option value="research">Investigar con fuentes citadas</option>
+                        <option value="longtext">Analizar documentos largos</option>
+                        <option value="scrolly">Crear historias visuales (Scrollytelling)</option>
+                        <option value="social">Crear contenido rápido para RRSS</option>
+                        <option value="team">Gestionar tareas de equipo</option>
+                        <option value="local">Probar un proyecto antes de subirlo</option>
+                    </select>
+                    <button onclick="recommendTool()" class="bg-[#d4a373] hover:bg-[#c29263] text-white font-bold py-3 px-8 rounded-lg transition-colors shadow-lg">
+                        Consultar
+                    </button>
+                </div>
+
+                <div id="recommendation-output" class="mt-8 hidden fade-in bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+                    <h4 class="text-xl font-bold mb-2" id="rec-title">Herramienta</h4>
+                    <p class="text-lg opacity-90" id="rec-desc">Descripción</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8 mt-8">
+        <div class="container mx-auto px-4 text-center">
+            <p class="opacity-60 text-sm">Desarrollado para visualizar la presentación "Herramientas de Datos e IA" - MPXA 2026</p>
+            <p class="opacity-40 text-xs mt-2">Ponente: Félix Arias | Fuente: Documentación proporcionada</p>
+        </div>
+    </footer>
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <script>
+        // --- Data Source ---
+        const toolsData = [
+            { id: 1, name: "ChatGPT (OpenAI)", category: "ia", icon: "🤖", desc: "Generación de texto, análisis, ejecución de código y brainstorming.", tags: ["Versátil", "Código"] },
+            { id: 2, name: "Claude (Anthropic)", category: "ia", icon: "🧠", desc: "Análisis de contextos largos, redacción natural y 'Claude Code' para programación.", tags: ["Contexto", "Programación"] },
+            { id: 3, name: "Gemini (Google)", category: "ia", icon: "💎", desc: "Investigación multimodal, integración con Google (Docs, Gmail).", tags: ["Multimodal", "Ecosistema"] },
+            { id: 4, name: "Perplexity AI", category: "ia", icon: "🔎", desc: "Motor de búsqueda con IA que cita fuentes. Ideal para verificación.", tags: ["Investigación", "Citas"] },
+            { id: 5, name: "Grok (xAI)", category: "ia", icon: "❌", desc: "Análisis de tendencias en tiempo real a través de X.", tags: ["Real-time", "Social"] },
+            { id: 6, name: "DeepSeek", category: "ia", icon: "🐳", desc: "Alto rendimiento para tareas técnicas y razonamiento complejo.", tags: ["Técnico", "Razonamiento"] },
+            
+            { id: 7, name: "Antigravity", category: "dev", icon: "🚀", desc: "Entorno para desarrollo y prototipado rápido de proyectos.", tags: ["Prototipado", "Testing"] },
+            { id: 8, name: "GitHub", category: "dev", icon: "🐙", desc: "Control de versiones y alojamiento de código/proyectos.", tags: ["Hosting", "Código"] },
+            { id: 9, name: "Cursor / VS Code", category: "dev", icon: "📝", desc: "Editores de código con IA integrada para asistencia.", tags: ["Editor", "IA"] },
+            { id: 10, name: "Localhost", category: "dev", icon: "🏠", desc: "Entorno de prueba local antes de subir a servidores reales.", tags: ["Testing", "Local"] },
+            
+            { id: 11, name: "Adobe Express", category: "dist", icon: "🎨", desc: "Gráficos rápidos, vídeos cortos y contenido social.", tags: ["Visual", "Rápido"] },
+            { id: 12, name: "Shorthand", category: "dist", icon: "📜", desc: "Historias 'scrollytelling' visualmente impactantes sin código.", tags: ["Narrativa", "No-Code"] },
+            { id: 13, name: "Medium", category: "dist", icon: "✍️", desc: "Publicación de artículos de opinión y reportajes.", tags: ["Blog", "Texto"] },
+            { id: 14, name: "Notion", category: "dist", icon: "📓", desc: "Páginas web sencillas, wikis y portafolios.", tags: ["Web", "Wiki"] },
+            
+            { id: 15, name: "Slack / Discord", category: "org", icon: "💬", desc: "Comunicación interna de equipos y comunidades.", tags: ["Chat", "Equipo"] },
+            { id: 16, name: "Trello", category: "org", icon: "📋", desc: "Gestión de tareas mediante tableros visuales (Kanban).", tags: ["Gestión", "Kanban"] },
+            { id: 17, name: "IFTTT", category: "org", icon: "🔗", desc: "Automatización de flujos de trabajo entre apps.", tags: ["Automatización"] },
+             { id: 18, name: "Datos Coruña", category: "data", icon: "📊", desc: "Portal de datos abiertos para proyectos locales.", tags: ["Datos", "Local"] }
+        ];
+
+        const workflowSteps = [
+            {
+                title: "1. Petición a la IA (Ideación)",
+                desc: "El proceso comienza solicitando ayuda a los modelos de lenguaje para generar estructuras, ideas o primeros borradores de código.",
+                tools: ["ChatGPT", "Claude", "Gemini", "Perplexity"]
+            },
+            {
+                title: "2. Edición de Código",
+                desc: "Refinamiento del material generado utilizando editores especializados que a menudo integran sus propios asistentes de IA.",
+                tools: ["Cursor", "VS Code", "Antigravity"]
+            },
+            {
+                title: "3. Comprobación Local",
+                desc: "Antes de publicar, es crucial verificar que todo funcione correctamente en tu propio ordenador (entorno seguro).",
+                tools: ["Localhost", "Navegador Web"]
+            },
+            {
+                title: "4. Alojamiento y Distribución",
+                desc: "Subida de los archivos a un servidor para que el mundo pueda verlos, y promoción en plataformas de contenido.",
+                tools: ["GitHub", "Hostinger/Ionos", "Shorthand", "Medium"]
+            }
+        ];
+
+        // --- Logic: Workflow Stepper ---
+        let currentStep = 0;
+
+        function setStep(index) {
+            currentStep = index;
+            
+            // Update UI Circles
+            for(let i=0; i<4; i++) {
+                const circle = document.getElementById(`step-circle-${i}`);
+                if (i === index) {
+                    circle.classList.remove('step-inactive');
+                    circle.classList.add('step-active');
+                } else {
+                    circle.classList.remove('step-active');
+                    circle.classList.add('step-inactive');
+                }
+            }
+
+            // Update Content
+            const container = document.getElementById('step-content-container');
+            const stepData = workflowSteps[index];
+            
+            // Create Tool Tags HTML
+            const toolsHtml = stepData.tools.map(t => `<span class="inline-block bg-gray-100 text-gray-700 rounded px-2 py-1 text-xs mr-2 mb-1 border border-gray-300">${t}</span>`).join('');
+
+            container.innerHTML = `
+                <div class="fade-in">
+                    <h4 class="text-xl font-bold text-[#7c9082] mb-2">${stepData.title}</h4>
+                    <p class="text-gray-700 mb-4">${stepData.desc}</p>
+                    <div class="mt-4">
+                        <span class="text-xs font-bold uppercase text-gray-400 tracking-wide block mb-2">Herramientas Clave:</span>
+                        <div class="flex flex-wrap">${toolsHtml}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Logic: Tool Explorer (Grid) ---
+        function renderTools(filter = 'all') {
+            const grid = document.getElementById('tools-grid');
+            grid.innerHTML = '';
+
+            const filtered = filter === 'all' ? toolsData : toolsData.filter(t => t.category === filter);
+
+            filtered.forEach(tool => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-lg card-shadow hover:shadow-lg transition-shadow border-t-4 border-[#d4a373] fade-in";
+                
+                let tagsHtml = tool.tags.map(tag => `<span class="text-[10px] uppercase font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded tracking-wider mr-2">${tag}</span>`).join('');
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="text-3xl">${tool.icon}</div>
+                        ${tool.category === 'ia' ? '<span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">IA</span>' : ''}
+                    </div>
+                    <h4 class="font-bold text-lg text-gray-800 mb-2">${tool.name}</h4>
+                    <p class="text-sm text-gray-600 mb-4 leading-relaxed">${tool.desc}</p>
+                    <div class="mt-auto pt-2 border-t border-gray-100 flex flex-wrap">
+                        ${tagsHtml}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterTools(category) {
+            // Update Buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if(btn.dataset.filter === category) {
+                    btn.classList.remove('filter-btn-inactive');
+                    btn.classList.add('filter-btn-active');
+                } else {
+                    btn.classList.remove('filter-btn-active');
+                    btn.classList.add('filter-btn-inactive');
+                }
+            });
+            renderTools(category);
+        }
+
+        // --- Logic: Task Matcher ---
+        function recommendTool() {
+            const val = document.getElementById('task-select').value;
+            const titleEl = document.getElementById('rec-title');
+            const descEl = document.getElementById('rec-desc');
+            const output = document.getElementById('recommendation-output');
+
+            let title = "";
+            let desc = "";
+
+            switch(val) {
+                case "code":
+                    title = "Claude (Claude Code) o Cursor";
+                    desc = "Claude destaca por generar código limpio, mientras que Cursor es un editor que integra IA directamente en tu flujo de trabajo.";
+                    break;
+                case "research":
+                    title = "Perplexity AI";
+                    desc = "Es ideal porque funciona como un motor de búsqueda que cita explícitamente las fuentes de donde obtiene la información.";
+                    break;
+                case "longtext":
+                    title = "Claude (Anthropic)";
+                    desc = "Destaca por su gran 'ventana de contexto', permitiéndole leer y analizar documentos muy extensos (libros, papers) de una vez.";
+                    break;
+                case "scrolly":
+                    title = "Shorthand";
+                    desc = "La plataforma recomendada para crear narrativas visuales inmersivas ('scrollytelling') sin necesidad de programar.";
+                    break;
+                case "social":
+                    title = "Adobe Express";
+                    desc = "Perfecto para gráficos rápidos y vídeos cortos optimizados para redes sociales.";
+                    break;
+                case "team":
+                    title = "Trello + Slack";
+                    desc = "Usa Trello para visualización de tareas (Kanban) y Slack/Discord para la comunicación diaria.";
+                    break;
+                case "local":
+                    title = "Localhost";
+                    desc = "Tu propio entorno local. Es esencial probar aquí antes de subir nada a un servidor público.";
+                    break;
+                default:
+                    return;
+            }
+
+            titleEl.textContent = title;
+            descEl.textContent = desc;
+            output.classList.remove('hidden');
+        }
+
+        // --- Charts Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setStep(0);
+            renderTools('all');
+
+            // Radar Chart Data: Inferred Capabilities
+            // Dimensions: Writing, Coding, Research, Context/Data Analysis, Multimodal
+            const radarCtx = document.getElementById('aiRadarChart').getContext('2d');
+            new Chart(radarCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Redacción/Texto', 'Código/Técnico', 'Investigación/Citas', 'Contexto Largo', 'Multimodal (Imagen/Docs)'],
+                    datasets: [{
+                        label: 'ChatGPT',
+                        data: [5, 4, 3, 3, 4],
+                        fill: true,
+                        backgroundColor: 'rgba(16, 163, 127, 0.2)',
+                        borderColor: 'rgb(16, 163, 127)',
+                        pointBackgroundColor: 'rgb(16, 163, 127)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(16, 163, 127)'
+                    }, {
+                        label: 'Claude',
+                        data: [5, 4, 2, 5, 3],
+                        fill: true,
+                        backgroundColor: 'rgba(217, 119, 87, 0.2)',
+                        borderColor: 'rgb(217, 119, 87)',
+                        pointBackgroundColor: 'rgb(217, 119, 87)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(217, 119, 87)'
+                    }, {
+                        label: 'Perplexity',
+                        data: [3, 2, 5, 3, 2],
+                        fill: true,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0,0,0,0.1)' },
+                            grid: { color: 'rgba(0,0,0,0.1)' },
+                            pointLabels: { font: { size: 11, family: 'Inter' } },
+                            suggestedMin: 0,
+                            suggestedMax: 5,
+                            ticks: { display: false, max: 5 } // Hide numbers on axis for cleaner look
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { family: 'Inter' } } },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 10, cornerRadius: 4 }
+                    }
+                }
+            });
+
+            // Donut Chart Data: Category Distribution
+            const donutCtx = document.getElementById('categoryDonutChart').getContext('2d');
+            const catCounts = { ia: 0, dev: 0, dist: 0, org: 0, data: 0 };
+            toolsData.forEach(t => { if(catCounts[t.category] !== undefined) catCounts[t.category]++; });
+
+            new Chart(donutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['IA Generativa', 'Desarrollo', 'Distribución', 'Organización', 'Datos'],
+                    datasets: [{
+                        data: [catCounts.ia, catCounts.dev, catCounts.dist, catCounts.org, catCounts.data],
+                        backgroundColor: [
+                            '#d4a373', // IA (Sand)
+                            '#7c9082', // Dev (Sage)
+                            '#e9edc9', // Dist (Pale Green)
+                            '#faedcd', // Org (Light Yellow)
+                            '#ccd5ae'  // Data (Olive)
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 15, font: { family: 'Inter', size: 11 } } },
+                        tooltip: { 
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw} Herramientas`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
